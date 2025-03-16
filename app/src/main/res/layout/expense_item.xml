@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/expenseItem"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="12dp"
+    android:gravity="center_vertical">
+
+    <TextView
+        android:id="@+id/expenseName"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:text="Name"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:id="@+id/expenseAmount"
+        android:layout_width="wrap_content"
+        android:text="$0.00"
+        android:layout_height="wrap_content"
+        android:paddingEnd="12dp" />
+
+    <Button
+        android:id="@+id/deleteButton"
+        android:text="Delete"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+</LinearLayout>
