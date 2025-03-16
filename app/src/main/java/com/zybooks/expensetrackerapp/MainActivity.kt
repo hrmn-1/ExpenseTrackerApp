@@ -8,8 +8,8 @@ import androidx.recyclerview.widget.RecyclerView
 
 class MainActivity : AppCompatActivity() {
 
-    // Data class for Expense
-    data class Expense(val name: String, val amount: Double)
+
+    class Expense(val name: String, val amount: Double)
 
     private lateinit var nameInput: EditText
     private lateinit var amountInput: EditText
