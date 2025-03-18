@@ -24,6 +24,7 @@ class MainActivity : AppCompatActivity() {
 
     private val expenseList = ArrayList<Expense>()
     private lateinit var adapter: ExpenseAdapter
+    private lateinit var footerFragment: FooterFragment
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,6 +46,13 @@ class MainActivity : AppCompatActivity() {
             intent.data = android.net.Uri.parse(url)
             startActivity(intent)
         }
+        val headerFragment = HeaderFragment()
+        footerFragment = FooterFragment()
+
+        val transaction = supportFragmentManager.beginTransaction()
+        transaction.replace(R.id.headerContainer, headerFragment)
+        transaction.replace(R.id.footerContainer, footerFragment)
+        transaction.commit()
 
         addButton.setOnClickListener {
             val name = nameInput.text.toString()
@@ -62,6 +70,9 @@ class MainActivity : AppCompatActivity() {
                     val newExpense = Expense(name, amount, currentDate)
                     expenseList.add(newExpense)
                     adapter.notifyItemInserted(expenseList.size - 1)
+
+                    val totalAmount = expenseList.sumOf { it.amount }
+                    footerFragment.updateTotalAmount(totalAmount)
 
                     nameInput.text.clear()
                     amountInput.text.clear()
