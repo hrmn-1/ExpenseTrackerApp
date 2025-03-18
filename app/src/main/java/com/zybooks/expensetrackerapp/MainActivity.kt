@@ -1,21 +1,26 @@
 package com.zybooks.expensetrackerapp
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import java.text.SimpleDateFormat
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
 
-    class Expense(val name: String, val amount: Double)
+    class Expense(val name: String, val amount: Double, val date: String)
+
 
     private lateinit var nameInput: EditText
     private lateinit var amountInput: EditText
     private lateinit var addButton: Button
     private lateinit var recyclerView: RecyclerView
+    private lateinit var tipsButton: Button
 
     private val expenseList = ArrayList<Expense>()
     private lateinit var adapter: ExpenseAdapter
@@ -29,14 +34,23 @@ class MainActivity : AppCompatActivity() {
         amountInput = findViewById(R.id.amountInput)
         addButton = findViewById(R.id.addButton)
         recyclerView = findViewById(R.id.recyclerView)
+        tipsButton = findViewById(R.id.tipsButton)
 
         recyclerView.layoutManager = LinearLayoutManager(this)
         adapter = ExpenseAdapter(expenseList)
         recyclerView.adapter = adapter
+        tipsButton.setOnClickListener {
+            val url = "https://www.financialtips.com"
+            val intent = Intent(Intent.ACTION_VIEW)
+            intent.data = android.net.Uri.parse(url)
+            startActivity(intent)
+        }
 
         addButton.setOnClickListener {
             val name = nameInput.text.toString()
             val amountText = amountInput.text.toString()
+            val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+
 
             if (name.isEmpty() || amountText.isEmpty()) {
                 Toast.makeText(this, "Please enter name and amount", Toast.LENGTH_SHORT).show()
@@ -45,7 +59,7 @@ class MainActivity : AppCompatActivity() {
                 if (amount == null) {
                     Toast.makeText(this, "Please enter a valid number", Toast.LENGTH_SHORT).show()
                 } else {
-                    val newExpense = Expense(name, amount)
+                    val newExpense = Expense(name, amount, currentDate)
                     expenseList.add(newExpense)
                     adapter.notifyItemInserted(expenseList.size - 1)
 
