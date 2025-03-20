@@ -17,8 +17,8 @@ class ExpenseDetailsActivity : AppCompatActivity() {
         val amountTextView: TextView = findViewById(R.id.amountTextView)
         val dateTextView: TextView = findViewById(R.id.dateTextView)
 
-        nameTextView.text = "Name: $name"
-        amountTextView.text = "Amount: $%.2f".format(amount)
-        dateTextView.text = "Date: $date"
+        nameTextView.text = "Expense Name: $name"
+        amountTextView.text = "Expense Amount: $%.2f".format(amount)
+        dateTextView.text = "Date of expense: $date"
     }
 }
