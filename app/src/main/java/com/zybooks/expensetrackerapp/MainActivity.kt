@@ -7,6 +7,9 @@ import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.*
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -25,6 +28,7 @@ class MainActivity : AppCompatActivity() {
     private val expenseList = ArrayList<Expense>()
     private lateinit var adapter: ExpenseAdapter
     private lateinit var footerFragment: FooterFragment
+    private val fileName = "expenses.json"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,6 +44,8 @@ class MainActivity : AppCompatActivity() {
         recyclerView.layoutManager = LinearLayoutManager(this)
         adapter = ExpenseAdapter(expenseList)
         recyclerView.adapter = adapter
+        loadExpenses()
+
         tipsButton.setOnClickListener {
             val url = "https://www.financialtips.com"
             val intent = Intent(Intent.ACTION_VIEW)
@@ -55,6 +61,10 @@ class MainActivity : AppCompatActivity() {
         transaction.commit()
 
         addButton.setOnClickListener {
+            addExpense()
+        }
+    }
+    private fun addExpense() {
             val name = nameInput.text.toString()
             val amountText = amountInput.text.toString()
             val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
@@ -71,6 +81,8 @@ class MainActivity : AppCompatActivity() {
                     expenseList.add(newExpense)
                     adapter.notifyItemInserted(expenseList.size - 1)
 
+                    saveExpenses()
+
                     val totalAmount = expenseList.sumOf { it.amount }
                     footerFragment.updateTotalAmount(totalAmount)
 
@@ -80,6 +92,51 @@ class MainActivity : AppCompatActivity() {
                 }
 
             }
+        }
+
+    private fun saveExpenses() {
+        val jsonArray = JSONArray()
+        for (expense in expenseList) {
+            val jsonObject = JSONObject().apply {
+                put("name", expense.name)
+                put("amount", expense.amount)
+                put("date", expense.date)
+            }
+            jsonArray.put(jsonObject)
+        }
+
+        try {
+            openFileOutput(fileName, MODE_PRIVATE).use { outputStream ->
+                outputStream.write(jsonArray.toString().toByteArray())
+            }
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun loadExpenses() {
+        try {
+            openFileInput(fileName).use { inputStream ->
+                val reader = BufferedReader(InputStreamReader(inputStream))
+                val jsonString = reader.readText()
+                val jsonArray = JSONArray(jsonString)
+
+                for (i in 0 until jsonArray.length()) {
+                    val jsonObject = jsonArray.getJSONObject(i)
+                    expenseList.add(
+                        Expense(
+                            jsonObject.getString("name"),
+                            jsonObject.getDouble("amount"),
+                            jsonObject.getString("date")
+                        )
+                    )
+                }
+                adapter.notifyDataSetChanged()
+            }
+        } catch (e: FileNotFoundException) {
+
+        } catch (e: IOException) {
+            e.printStackTrace()
         }
     }
         override fun onStart() {

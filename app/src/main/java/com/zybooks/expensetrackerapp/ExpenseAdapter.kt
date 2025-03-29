@@ -7,10 +7,12 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import androidx.lifecycle.createSavedStateHandle
 import androidx.recyclerview.widget.RecyclerView
 
-class ExpenseAdapter(private val expenseList: ArrayList<MainActivity.Expense>) :
-    RecyclerView.Adapter<ExpenseAdapter.ExpenseViewHolder>() {
+class ExpenseAdapter(private val expenseList: ArrayList<MainActivity.Expense>,
+
+) : RecyclerView.Adapter<ExpenseAdapter.ExpenseViewHolder>() {
 
     class ExpenseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val nameText: TextView = itemView.findViewById(R.id.expenseName)
@@ -43,6 +45,7 @@ class ExpenseAdapter(private val expenseList: ArrayList<MainActivity.Expense>) :
         holder.deleteButton.setOnClickListener {
             expenseList.removeAt(position)
             notifyItemRemoved(position)
+            notifyItemRangeChanged(position, expenseList.size)
             Toast.makeText(holder.itemView.context, "Expense Deleted", Toast.LENGTH_SHORT).show()
 
 
