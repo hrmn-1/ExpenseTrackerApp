@@ -1,13 +1,14 @@
+
 package com.zybooks.expensetrackerapp
 
 import android.os.Bundle
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 
-class ExpenseDetailsActivity : AppCompatActivity() {
+class ExpenseDetailsFragment : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_expense_details)
+        setContentView(R.layout.fragment_expense_details)
 
         val name = intent.getStringExtra("name")
         val amount = intent.getDoubleExtra("amount", 0.0)
