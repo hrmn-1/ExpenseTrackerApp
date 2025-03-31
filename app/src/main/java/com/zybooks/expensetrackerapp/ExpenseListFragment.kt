@@ -1,186 +1,160 @@
 package com.zybooks.expensetrackerapp
 
-import android.content.Intent
+import android.content.Context
+import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.Button
+import android.widget.EditText
+import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import org.json.JSONArray
 import org.json.JSONObject
-import java.io.*
-import java.text.SimpleDateFormat
-import java.util.*
+import java.io.File
+import java.io.FileInputStream
+import java.io.InputStreamReader
 
 class ExpenseListFragment : Fragment() {
-
-
-
-
-    private lateinit var nameInput: EditText
-    private lateinit var amountInput: EditText
-    private lateinit var addButton: Button
-    private lateinit var recyclerView: RecyclerView
-    private lateinit var tipsButton: Button
-    private lateinit var footerFragment: FooterFragment
-
-    private val expenseList = ArrayList<Expense>()
+    private val expenseList = mutableListOf<Expense>()
     private lateinit var adapter: ExpenseAdapter
-    private val fileName = "expenses.json"
+    private var footerFragment: FooterFragment? = null
+    private val expensesFileName = "expenses.json"
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_expense_list, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Initialize views
-        nameInput = view.findViewById(R.id.nameInput)
-        amountInput = view.findViewById(R.id.amountInput)
-        addButton = view.findViewById(R.id.addButton)
-        recyclerView = view.findViewById(R.id.recyclerView)
-        tipsButton = view.findViewById(R.id.tipsButton)
+        val expenseNameInput = view.findViewById<EditText>(R.id.nameInput)
+        val expenseAmountInput = view.findViewById<EditText>(R.id.amountInput)
+        val addExpenseButton = view.findViewById<Button>(R.id.addButton)
+        val financialTipsButton = view.findViewById<Button>(R.id.tipsButton)
+        val expenseRecyclerView = view.findViewById<RecyclerView>(R.id.recyclerView)
 
-        recyclerView.layoutManager = LinearLayoutManager(requireContext())
-        adapter = ExpenseAdapter(expenseList) { expense ->
+        adapter = ExpenseAdapter(expenseList, { position -> showExpenseDetails(position) }, { position -> deleteExpense(position) })
+        expenseRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        expenseRecyclerView.adapter = adapter
 
-            Toast.makeText(requireContext(), "Details: ${expense.name}", Toast.LENGTH_SHORT).show()
-        }
+        loadExpensesFromStorage()
+        updateTotalAmount()
 
-        recyclerView.adapter = adapter
-        loadExpenses()
-
-        // Open the financial tips website when clicked
-        tipsButton.setOnClickListener {
-            val url = "https://www.financialtips.com"
-            val intent = Intent(Intent.ACTION_VIEW)
-            intent.data = android.net.Uri.parse(url)
-            startActivity(intent)
-        }
-
-        // Initialize footer fragment
         footerFragment = childFragmentManager.findFragmentById(R.id.footerFragment) as? FooterFragment
-            ?: FooterFragment()
 
-        val transaction = childFragmentManager.beginTransaction()
-        transaction.replace(R.id.footerContainer, footerFragment)
-        transaction.commit()
+        addExpenseButton.setOnClickListener {
+            val name = expenseNameInput.text.toString().trim()
+            val amount = expenseAmountInput.text.toString().trim().toDoubleOrNull()
+            val date = getCurrentDate()// Method to fetch current date
 
-        // Add expense when the button is clicked
-        addButton.setOnClickListener {
-            addExpense()
-        }
-    }
-
-    private fun addExpense() {
-        val name = nameInput.text.toString()
-        val amountText = amountInput.text.toString()
-        val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-
-        if (name.isEmpty() || amountText.isEmpty()) {
-            Toast.makeText(requireContext(), "Please enter name and amount", Toast.LENGTH_SHORT).show()
-        } else {
-            val amount = amountText.toDoubleOrNull()
-            if (amount == null) {
-                Toast.makeText(requireContext(), "Please enter a valid number", Toast.LENGTH_SHORT).show()
-            } else {
-                val newExpense = Expense(name, amount, currentDate)
-                expenseList.add(newExpense)
-                adapter.notifyItemInserted(expenseList.size - 1)
-
-                // Save the updated expenses to file
-                saveExpenses()
-
-                // Update the total amount on the footer fragment
-                val totalAmount = expenseList.sumOf { it.amount }
-                footerFragment.updateTotalAmount(totalAmount)
-
-                // Clear the input fields
-                nameInput.text.clear()
-                amountInput.text.clear()
-                Toast.makeText(requireContext(), "Expense Added", Toast.LENGTH_SHORT).show()
+            if (name.isEmpty() || amount == null) {
+                Toast.makeText(requireContext(), "Please enter valid Name and Amount", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
             }
+
+            val newExpense = Expense(name, amount, date)
+            addExpenseToList(newExpense)
+
+            // Clear input fields after adding
+            expenseNameInput.text.clear()
+            expenseAmountInput.text.clear()
+        }
+
+        financialTipsButton.setOnClickListener {
+            openFinancialTipsWebsite()
         }
     }
 
-    private fun saveExpenses() {
+    private fun showExpenseDetails(position: Int) {
+        val expense = expenseList[position]
+        val bundle = Bundle().apply {
+            putString("expenseName", expense.name)
+            putString("expenseAmount", expense.amount.toString())
+            putString("expenseDate", expense.date)
+        }
+        findNavController().navigate(R.id.expenseDetailsFragment, bundle)
+    }
+
+    private fun deleteExpense(position: Int) {
+        val removedExpense = expenseList[position]
+        Toast.makeText(requireContext(), "Deleted: ${removedExpense.name}", Toast.LENGTH_SHORT).show()
+        expenseList.removeAt(position)
+        adapter.notifyDataSetChanged()
+        saveExpensesToStorage()
+        updateTotalAmount()
+    }
+
+    private fun addExpenseToList(expense: Expense) {
+        expenseList.add(expense)
+        adapter.notifyDataSetChanged()
+        saveExpensesToStorage()
+        updateTotalAmount()
+    }
+
+    private fun saveExpensesToStorage() {
         val jsonArray = JSONArray()
-        for (expense in expenseList) {
-            val jsonObject = JSONObject().apply {
-                put("name", expense.name)
-                put("amount", expense.amount)
-                put("date", expense.date)
-            }
-            jsonArray.put(jsonObject)
+        expenseList.forEach { expense ->
+            val obj = JSONObject()
+            obj.put("name", expense.name)
+            obj.put("amount", expense.amount)
+            obj.put("date", expense.date)
+            jsonArray.put(obj)
         }
+        val jsonString = jsonArray.toString()
 
         try {
-            requireContext().openFileOutput(fileName, android.content.Context.MODE_PRIVATE).use { outputStream ->
-                outputStream.write(jsonArray.toString().toByteArray())
+            requireContext().openFileOutput(expensesFileName, Context.MODE_PRIVATE).use {
+                it.write(jsonString.toByteArray())
             }
-        } catch (e: IOException) {
+        } catch (e: Exception) {
             e.printStackTrace()
         }
     }
 
-    private fun loadExpenses() {
-        try {
-            requireContext().openFileInput(fileName).use { inputStream ->
-                val reader = BufferedReader(InputStreamReader(inputStream))
-                val jsonString = reader.readText()
-                val jsonArray = JSONArray(jsonString)
+    private fun loadExpensesFromStorage() {
+        val file = File(requireContext().filesDir, expensesFileName)
+        if (!file.exists()) return
+        expenseList.clear()
 
-                for (i in 0 until jsonArray.length()) {
-                    val jsonObject = jsonArray.getJSONObject(i)
-                    expenseList.add(
-                        Expense(
-                            jsonObject.getString("name"),
-                            jsonObject.getDouble("amount"),
-                            jsonObject.getString("date")
-                        )
-                    )
-                }
-                adapter.notifyDataSetChanged()
+        try {
+            val inputStream = FileInputStream(file)
+            val reader = InputStreamReader(inputStream)
+            val content = reader.readText()
+            reader.close()
+
+            val jsonArray = JSONArray(content)
+            for (i in 0 until jsonArray.length()) {
+                val obj = jsonArray.getJSONObject(i)
+                val name = obj.getString("name")
+                val amount = obj.getDouble("amount")
+                val date = obj.getString("date")
+                expenseList.add(Expense(name, amount, date))
             }
-        } catch (e: FileNotFoundException) {
-            // File does not exist yet
-        } catch (e: IOException) {
+            adapter.notifyDataSetChanged()
+            updateTotalAmount()
+        } catch (e: Exception) {
             e.printStackTrace()
         }
     }
 
-    // Lifecycle Methods
-    override fun onStart() {
-        super.onStart()
-        Log.d("FragmentLifecycle", "onStart called")
+    private fun updateTotalAmount() {
+        val total = expenseList.sumOf { it.amount }
+        footerFragment?.updateTotalAmount(total)
     }
 
-    override fun onResume() {
-        super.onResume()
-        Log.d("FragmentLifecycle", "onResume called")
+    private fun getCurrentDate(): String {
+        return "2025-03-30"
     }
 
-    override fun onPause() {
-        super.onPause()
-        Log.d("FragmentLifecycle", "onPause called")
-    }
 
-    override fun onStop() {
-        super.onStop()
-        Log.d("FragmentLifecycle", "onStop called")
-    }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        Log.d("FragmentLifecycle", "onDestroy called")
+    private fun openFinancialTipsWebsite() {
+        val browserIntent = android.content.Intent(android.content.Intent.ACTION_VIEW, Uri.parse("https://www.financialtips.com"))
+        startActivity(browserIntent)
     }
 }

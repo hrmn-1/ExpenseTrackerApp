@@ -4,18 +4,17 @@
     xmlns:tools="http://schemas.android.com/tools"
     app:startDestination="@id/expenseListFragment">
 
-    <!-- Expense List Fragment -->
     <fragment
         android:id="@+id/expenseListFragment"
         android:name="com.zybooks.expensetrackerapp.ExpenseListFragment"
-        android:label="Expense List"
+        android:label="Expenses"
         tools:layout="@layout/fragment_expense_list">
         <action
             android:id="@+id/action_expenseListFragment_to_expenseDetailsFragment"
-            app:destination="@id/expenseDetailsFragment" />
+            app:destination="@id/expenseDetailsFragment"
+            />
     </fragment>
 
-    <!-- Expense Details Fragment -->
     <fragment
         android:id="@+id/expenseDetailsFragment"
         android:name="com.zybooks.expensetrackerapp.ExpenseDetailsFragment"
@@ -26,7 +25,7 @@
             app:argType="string" />
         <argument
             android:name="expenseAmount"
-            app:argType="double" />
+            app:argType="string" />
         <argument
             android:name="expenseDate"
             app:argType="string" />

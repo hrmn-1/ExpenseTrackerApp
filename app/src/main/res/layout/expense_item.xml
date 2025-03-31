@@ -1,36 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/expenseItem"
-    android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="12dp"
-    android:gravity="center_vertical">
+    android:orientation="horizontal"
+    android:padding="8dp">
 
     <TextView
         android:id="@+id/expenseName"
         android:layout_width="0dp"
-        android:layout_weight="1"
-        android:text="Name"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_weight="2"
+        android:text="Expense Name"
+        android:textSize="18sp" />
 
     <TextView
         android:id="@+id/expenseAmount"
-        android:layout_width="wrap_content"
-        android:text="$0.00"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:paddingEnd="12dp" />
-
+        android:layout_weight="1"
+        android:text="$0.00"
+        android:textSize="18sp" />
     <Button
         android:id="@+id/deleteButton"
-        android:text="Delete"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:text="Delete" />
 
     <Button
         android:id="@+id/detailsButton"
-        android:text="Show Details"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:text="Details"
+        android:textSize="12sp"
+        android:padding="4dp"
+        android:layout_marginStart="4dp"/>
+
 
 </LinearLayout>
